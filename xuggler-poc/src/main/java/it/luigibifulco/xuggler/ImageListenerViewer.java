@@ -23,7 +23,7 @@ public class ImageListenerViewer implements Runnable {
 
 	private List<BufferedImage> buffer = new ArrayList<BufferedImage>();
 
-	private final static int MAX_BUFFER_SIZE = 10;
+	private final static int MAX_BUFFER_SIZE = 1;
 
 	public final static int RATE = 6;
 
@@ -36,7 +36,11 @@ public class ImageListenerViewer implements Runnable {
 	private ExecutorService executor;
 
 	public void addFrame(BufferedImage image) {
-		frames.offer(image);
+		if (image != null) {
+			frames.offer(image);
+		} else {
+			System.out.println("image not add is null");
+		}
 	}
 
 	public void start() throws InterruptedException, InvocationTargetException {
