@@ -52,6 +52,7 @@ public class ServerSocketImageReceiver {
 		InputStream stream = socket.getInputStream();
 		ImageInputStream imageIs = null;
 		while (true) {
+			//System.out.println("Reading...");
 			char header1 = (char) stream.read();
 			char header2 = (char) stream.read();
 			int size = 0;
@@ -63,13 +64,15 @@ public class ServerSocketImageReceiver {
 				try{
 				bigI = new BigInteger(buffSize);
 				}catch(Exception e){
-					
+					e.printStackTrace();
 				}
 			} else {
+				//System.out.println("Init Header not present, reset!");
 				continue;
 			}
 			char header3 = (char) stream.read();
 			if(header3!='#'){
+				//System.out.println("Close Header not present, reset!");
 				continue;
 			}
 				

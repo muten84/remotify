@@ -25,7 +25,7 @@ public class ImageListenerViewer implements Runnable {
 
 	private final static int MAX_BUFFER_SIZE = 1;
 
-	public final static int RATE = 6;
+	public final static int RATE = 5;
 
 	private BlockingQueue<BufferedImage> frames = new LinkedBlockingQueue<BufferedImage>(MAX_BUFFER_SIZE);
 
@@ -34,13 +34,39 @@ public class ImageListenerViewer implements Runnable {
 	private final static Object LOCK = new Object();
 
 	private ExecutorService executor;
+	
+	private BufferedImage lastImage;
 
+	boolean bufferedImagesEqual(BufferedImage img1, BufferedImage img2) {
+	    if (img1.getWidth() == img2.getWidth() && img1.getHeight() == img2.getHeight()) {
+	        for (int x = 0; x < img1.getWidth(); x++) {
+	            for (int y = 0; y < img1.getHeight(); y++) {
+	                if (img1.getRGB(x, y) != img2.getRGB(x, y))
+	                    return false;
+	            }
+	        }
+	    } else {
+	        return false;
+	    }
+	    return true;
+	}
+	
 	public void addFrame(BufferedImage image) {
-		if (image != null) {
+//		boolean proceed=false;
+//		if(lastImage==null) {
+//			lastImage = image;
+//		}
+//		if(image!=null && lastImage !=null && bufferedImagesEqual(image, lastImage)) {
+//			proceed = true;
+//		}
+		boolean proceed = true;
+		if (proceed && image != null) {	
+			lastImage = image;
 			frames.offer(image);
 		} else {
 			System.out.println("image not add is null");
 		}
+
 	}
 
 	public void start() throws InterruptedException, InvocationTargetException {
@@ -85,8 +111,8 @@ public class ImageListenerViewer implements Runnable {
 			}
 			// System.out.println("Waiting for new frames...");
 			BufferedImage image;
-			try {
-				image = frames.poll(1, TimeUnit.MILLISECONDS);
+			try {				
+				image = frames.poll(SLOW_DOWN_FACTOR, TimeUnit.MILLISECONDS);
 				if (image != null) {
 					buffer.add(image);
 				}
