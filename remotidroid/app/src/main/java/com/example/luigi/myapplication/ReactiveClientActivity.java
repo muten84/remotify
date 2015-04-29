@@ -49,7 +49,7 @@ public class ReactiveClientActivity extends Activity {
                 return false;
             }
         });
-        webview.loadUrl("http://proxy.eng.it:3128:luibiful:manga123eng@www.luigibifulco.it/blog");
+        webview.loadUrl("http://www.luigibifulco.it/blog");
         mHandler = new Handler();
 
         button2.setOnClickListener(new View.OnClickListener() {
