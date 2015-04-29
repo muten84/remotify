@@ -36,23 +36,22 @@ public class ServerSocketImageReceiver {
 		viewer = new ImageListenerViewer();
 	}
 
-	public void startUI() throws InterruptedException,
-			InvocationTargetException {
+	public void startUI() throws InterruptedException, InvocationTargetException {
 		System.out.println("start UI");
 		viewer.start();
 	}
 
-	public void start(int port) throws IOException, InterruptedException,
-			InvocationTargetException {
+	public void start(int port) throws IOException, InterruptedException, InvocationTargetException {
 		System.out.println("starting server with port: " + port);
 		serverSocket = new ServerSocket(port);
 		System.out.println("accepting connection");
 		Socket socket = serverSocket.accept();
 		System.out.println("connection accepted");
+		viewer.updateTitle("Connected.. receiving frames...");
 		InputStream stream = socket.getInputStream();
 		ImageInputStream imageIs = null;
 		while (true) {
-			//System.out.println("Reading...");
+//			System.out.println("Reading...");
 			char header1 = (char) stream.read();
 			char header2 = (char) stream.read();
 			int size = 0;
@@ -61,22 +60,22 @@ public class ServerSocketImageReceiver {
 				size = (int) stream.read();
 				byte[] buffSize = new byte[size];
 				stream.read(buffSize);
-				try{
-				bigI = new BigInteger(buffSize);
-				}catch(Exception e){
+				try {
+					bigI = new BigInteger(buffSize);
+				} catch (Exception e) {
 					e.printStackTrace();
 				}
 			} else {
-				//System.out.println("Init Header not present, reset!");
+//				System.out.println("Init Header not present: " + header1 + " - " + header2);
 				continue;
 			}
 			char header3 = (char) stream.read();
-			if(header3!='#'){
-				//System.out.println("Close Header not present, reset!");
+			if (header3 != '#') {
+//				System.out.println("Close Header not present, reset!");
 				continue;
 			}
-				
-			if (bigI != null) {			
+
+			if (bigI != null) {
 				imageIs = new MemoryCacheImageInputStream(stream);
 				BufferedImage image = null;
 				try {
@@ -85,18 +84,20 @@ public class ServerSocketImageReceiver {
 					e.printStackTrace();
 					image = null;
 				}
-				System.out.println("image read... ");
+				// System.out.println("image read... ");
 				if (image == null) {
-					System.out.println("image is null :(");
+//					System.out.println("image is null :(");
 					continue;
 				}
+				viewer.updateTitle("Reading...");
 				addFrame(image);
+				//stream.reset();
 			}
 		}
 	}
 
 	public void addFrame(BufferedImage image) {
-		System.out.println("Adding new frame");
+		// System.out.println("Adding new frame");
 		viewer.addFrame(image);
 	}
 
@@ -126,8 +127,7 @@ public class ServerSocketImageReceiver {
 				e.printStackTrace();
 			}
 			byte[] imageBytes = byteOs.toByteArray();
-			System.out.println("Image sent: " + written + " - "
-					+ imageOs.length() + " - " + imageBytes.length);
+			System.out.println("Image sent: " + written + " - " + imageOs.length() + " - " + imageBytes.length);
 			BigInteger i = BigInteger.valueOf(imageOs.length());
 			byte[] length = i.toByteArray();
 			os.write((char) '#');
@@ -145,9 +145,7 @@ public class ServerSocketImageReceiver {
 
 	}
 
-	public static void main(String[] args) throws AWTException,
-			UnknownHostException, IOException, InterruptedException,
-			InvocationTargetException {
+	public static void main(String[] args) throws AWTException, UnknownHostException, IOException, InterruptedException, InvocationTargetException {
 		final ServerSocketImageReceiver server = new ServerSocketImageReceiver();
 		server.startUI();
 		new Thread(new Runnable() {
@@ -199,20 +197,17 @@ public class ServerSocketImageReceiver {
 				}
 				while (true) {
 					System.out.println(">>>>>>>>>>>>>>><Resending screenshot");
-					BufferedImage s = r.createScreenCapture(new Rectangle(
-							Toolkit.getDefaultToolkit().getScreenSize()));
+					BufferedImage s = r.createScreenCapture(new Rectangle(Toolkit.getDefaultToolkit().getScreenSize()));
 					double scale = 0.75;
 					int w = (int) (s.getWidth() * scale);
 					int h = (int) (s.getHeight() * scale);
-					BufferedImage outImage = new BufferedImage(w, h,
-							BufferedImage.TYPE_INT_RGB);
+					BufferedImage outImage = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);
 					AffineTransform trans = new AffineTransform();
 					trans.scale(scale, scale);
 					Graphics2D g = outImage.createGraphics();
 					g.drawImage(s, trans, null);
 					g.dispose();
-					System.out
-							.println(">>>>>>>>>>>>>>> invoking client for sending image");
+					System.out.println(">>>>>>>>>>>>>>> invoking client for sending image");
 					try {
 						client.sendImage(outImage);
 					} catch (IOException e) {

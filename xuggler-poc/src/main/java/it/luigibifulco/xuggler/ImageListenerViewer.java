@@ -23,50 +23,54 @@ public class ImageListenerViewer implements Runnable {
 
 	private List<BufferedImage> buffer = new ArrayList<BufferedImage>();
 
-	private final static int MAX_BUFFER_SIZE = 1;
+	private final static int FLUSH_BUFFER_SIZE = 1;
 
-	public final static int RATE = 5;
+	public final static int RATE = 1;
 
-	private BlockingQueue<BufferedImage> frames = new LinkedBlockingQueue<BufferedImage>(MAX_BUFFER_SIZE);
+	private BlockingQueue<BufferedImage> frames = new LinkedBlockingQueue<BufferedImage>(5);
 
 	private final static long SLOW_DOWN_FACTOR = 300;
 
 	private final static Object LOCK = new Object();
 
 	private ExecutorService executor;
-	
+
 	private BufferedImage lastImage;
 
 	boolean bufferedImagesEqual(BufferedImage img1, BufferedImage img2) {
-	    if (img1.getWidth() == img2.getWidth() && img1.getHeight() == img2.getHeight()) {
-	        for (int x = 0; x < img1.getWidth(); x++) {
-	            for (int y = 0; y < img1.getHeight(); y++) {
-	                if (img1.getRGB(x, y) != img2.getRGB(x, y))
-	                    return false;
-	            }
-	        }
-	    } else {
-	        return false;
-	    }
-	    return true;
+		if (img1.getWidth() == img2.getWidth() && img1.getHeight() == img2.getHeight()) {
+			for (int x = 0; x < img1.getWidth(); x++) {
+				for (int y = 0; y < img1.getHeight(); y++) {
+					if (img1.getRGB(x, y) != img2.getRGB(x, y))
+						return false;
+				}
+			}
+		} else {
+			return false;
+		}
+		return true;
 	}
-	
+
 	public void addFrame(BufferedImage image) {
-//		boolean proceed=false;
-//		if(lastImage==null) {
-//			lastImage = image;
-//		}
-//		if(image!=null && lastImage !=null && bufferedImagesEqual(image, lastImage)) {
-//			proceed = true;
-//		}
+		// boolean proceed=false;
+		// if(lastImage==null) {
+		// lastImage = image;
+		// }
+		// if(image!=null && lastImage !=null && bufferedImagesEqual(image, lastImage)) {
+		// proceed = true;
+		// }
 		boolean proceed = true;
-		if (proceed && image != null) {	
+		if (proceed && image != null) {
 			lastImage = image;
 			frames.offer(image);
 		} else {
 			System.out.println("image not add is null");
 		}
 
+	}
+	
+	public static void updateTitle(String msg) {
+		mScreen.setTitle(msg);
 	}
 
 	public void start() throws InterruptedException, InvocationTargetException {
@@ -87,8 +91,8 @@ public class ImageListenerViewer implements Runnable {
 		while (true) {
 			// synchronized (LOCK) {
 			int size = buffer.size();
-			if (size == MAX_BUFFER_SIZE) {
-				System.out.println("Buffer size reached :" + size);
+			if (size == FLUSH_BUFFER_SIZE) {
+				//System.out.println("Buffer size reached :" + size);
 				// meglio sottomettere questi thread come task ad un executor....
 				BufferReader reader = new BufferReader(new ArrayList<BufferedImage>(buffer));
 				// Thread readerThread = new Thread(reader);
@@ -99,7 +103,7 @@ public class ImageListenerViewer implements Runnable {
 				}
 				continue;
 
-			} else if (buffer.size() >= MAX_BUFFER_SIZE) {
+			} else if (buffer.size() >= FLUSH_BUFFER_SIZE) {
 				try {
 					System.out.println("Buffer full waiting for reading...");
 					Thread.sleep(SLOW_DOWN_FACTOR);
@@ -110,12 +114,23 @@ public class ImageListenerViewer implements Runnable {
 				// continue;
 			}
 			// System.out.println("Waiting for new frames...");
-			BufferedImage image;
-			try {				
-				image = frames.poll(SLOW_DOWN_FACTOR, TimeUnit.MILLISECONDS);
-				if (image != null) {
-					buffer.add(image);
+			BufferedImage image = null;
+			try {
+//				if (frames.size() > MAX_BUFFER_SIZE) {
+//					List<BufferedImage> drain = new ArrayList<BufferedImage>();
+//					frames.drainTo(drain);
+//					image = drain.get(drain.size() - 1);
+//				}
+				if (image == null) {
+					image = frames.take();
+					// poll(SLOW_DOWN_FACTOR, TimeUnit.MILLISECONDS);
+					if (image != null) {
+						buffer.add(image);
+					}
 				}
+//				else {
+//					buffer.add(image);
+//				}
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -134,28 +149,30 @@ public class ImageListenerViewer implements Runnable {
 		public void run() {
 			// read buffer and show on video screen
 			// synchronized (LOCK) {
-			System.out.println(">>>>>START Reading " + this.buffer.size() + "frames");
+//			System.out.println(">>>>>START Reading " + this.buffer.size() + "frames");
 			for (BufferedImage bi : this.buffer) {
+				try {
+					Thread.sleep(RATE);
+				} catch (InterruptedException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
 				final BufferedImage bgrScreen = convertToType(bi, BufferedImage.TYPE_3BYTE_BGR);
 				try {
 					SwingUtilities.invokeAndWait(new Runnable() {
 
 						public void run() {
+							updateTitle("Refreshing...");
 							updateJavaWindow(bgrScreen);
+							
+							
 
 						}
-					});
+					});					
 				} catch (InterruptedException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				} catch (InvocationTargetException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-
-				try {
-					Thread.sleep(RATE);
-				} catch (InterruptedException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
@@ -167,8 +184,8 @@ public class ImageListenerViewer implements Runnable {
 	}
 
 	private static void updateJavaWindow(BufferedImage javaImage) {
-		System.out.println("update image on window");
-		mScreen.setImage(javaImage);
+//		System.out.println("update image on window");		
+		mScreen.setImage(javaImage);		
 		// mScreen.repaint();
 	}
 
@@ -178,7 +195,8 @@ public class ImageListenerViewer implements Runnable {
 	private static void openJavaWindow() {
 		System.out.println("Opening java window");
 		mScreen = new VideoImage();
-		mScreen.setSize(400, 400);
+		mScreen.setTitle("Server is waiting for incoming connection....");
+		mScreen.setSize(640, 480);
 
 	}
 
@@ -216,11 +234,11 @@ public class ImageListenerViewer implements Runnable {
 	public static BufferedImage getImageFromFile(File img) {
 
 		try {
-			System.out.println("fileName :" + img.getName());
+//			System.out.println("fileName :" + img.getName());
 
 			BufferedImage in = null;
 			if (img != null) {
-				System.out.println("img :" + img.getName());
+//				System.out.println("img :" + img.getName());
 				in = ImageIO.read(img);
 			}
 			return in;
