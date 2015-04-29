@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:tools="http://schemas.android.com/tools"
+    android:layout_height="fill_parent" android:layout_width="fill_parent" android:orientation="vertical"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:weightSum="1"
+    tools:context=".SimpleClientActivity">
+
+    <TextView android:id="@+id/textView1" android:layout_height="wrap_content" android:layout_width="wrap_content"
+        android:text="Press Start to send stream..."
+        android:layout_margin="10px"
+        android:layout_gravity="center_horizontal"
+        android:textAlignment="center"
+        android:autoText="false"
+        android:capitalize="words"
+        android:gravity="top|center|fill"
+        android:lines="2">
+
+
+
+    </TextView>
+
+    <EditText
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:inputType="textMultiLine"
+        android:ems="10"
+        android:id="@+id/editText"
+        android:layout_gravity="center_horizontal"
+        android:layout_weight="0.22"
+        android:clickable="true"
+        android:editable="true"
+        android:elegantTextHeight="true"
+        android:hint="Try to modify..." />
+   <WebView  xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/webview"
+        android:layout_width="400dp"
+        android:layout_height="200dp"
+        />
+    <Button android:id="@+id/button1" android:layout_gravity="center_horizontal" android:layout_height="wrap_content"
+        android:layout_width="wrap_content" android:text="START"
+        android:enabled="true">
+    </Button>
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="STOP"
+        android:id="@+id/button2"
+        android:layout_gravity="center_horizontal"
+        android:clickable="true"
+        android:enabled="true" />
+
+</LinearLayout>
