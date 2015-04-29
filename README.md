@@ -11,5 +11,5 @@ Trough the START button you can run a connection to the server and start the sen
 
 Once started the server and the app you can view froma  remote host an App developed in this way.
 
-##Conclusion
+##Notes:
 The POC does not focus on performance and streaming issues. The entire project rely on the xuggler libraries for the server and the Android libraries for the client.
